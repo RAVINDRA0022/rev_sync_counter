@@ -1,0 +1,63 @@
+`timescale 1ns / 1ps
+
+
+module tb_sync_counter;
+    reg clk, rst;              
+    wire [3:0] q, prev_q;      
+
+    sync_counter uut (
+        .clk(clk),
+        .rst(rst),
+        .q(q),
+        .prev_q(prev_q)
+    );
+
+
+    always #5 clk = ~clk;
+
+    initial begin
+       
+        clk = 0;
+        rst = 1;    
+        #10;
+        
+        $display("TEST 1: Reset Condition");
+        rst = 1;
+        #10;
+        $display("Time: %0t | q = %b | prev_q = %b", $time, q, prev_q);
+        #10;
+
+        $display("\nTEST 2: Normal Counting");
+        rst = 0;
+        repeat (16) begin
+            #10;
+            $display("Time: %0t | q = %b | prev_q = %b", $time, q, prev_q);
+        end
+
+
+        $display("\nTEST 3: Multiple Resets");
+        rst = 1;
+        #10;
+        rst = 0;
+        #50;
+        rst = 1;
+        #10;
+        rst = 0;
+        #50;
+
+        $display("\nTEST 4: Glitch Handling");
+        rst = 1;
+        #2;  
+        rst = 0;
+        #50;
+
+        $display("\nTEST 5: Simultaneous Clock & Reset Edge");
+        #3 rst = 1;  
+        #7 rst = 0;  
+        
+        #100;
+        $display("\nSimulation complete.");
+        $stop;
+    end
+endmodule
+

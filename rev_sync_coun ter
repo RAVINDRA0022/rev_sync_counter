@@ -1,0 +1,45 @@
+`timescale 1ns / 1ps
+
+
+module toffoli_gate(input a, input b, input c, output y);
+    assign y = c ^ (a & b);  
+endmodule
+
+
+module fredkin_gate(input sel, input a, input b, output y1, output y2);
+    assign y1 = sel ? b : a;  
+    assign y2 = sel ? a : b;
+endmodule
+
+
+module reversible_tff(input clk, input rst, input t, output reg q, output reg prev_q);
+    wire temp;
+
+    toffoli_gate tg1 (.a(q), .b(t), .c(prev_q), .y(temp));
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            q <= 1'b0;
+            prev_q <= 1'b0;  
+        end else begin
+            q <= temp;       
+            prev_q <= q;   
+        end
+    end
+endmodule
+
+
+module sync_counter(input clk, input rst, output [3:0] q, output [3:0] prev_q);
+    wire [3:0] t; 
+
+    assign t[0] = 1'b1;            
+    assign t[1] = q[0];             
+    assign t[2] = q[0] & q[1];     
+    assign t[3] = q[0] & q[1] & q[2];  
+    
+    reversible_tff tff0 (clk, rst, t[0], q[0], prev_q[0]);
+    reversible_tff tff1 (clk, rst, t[1], q[1], prev_q[1]);
+    reversible_tff tff2 (clk, rst, t[2], q[2], prev_q[2]);
+    reversible_tff tff3 (clk, rst, t[3], q[3], prev_q[3]);
+endmodule
+
